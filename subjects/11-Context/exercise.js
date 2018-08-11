@@ -18,16 +18,32 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
+import { format } from "path";
+
+const FormContext = React.createContext();
 
 class Form extends React.Component {
   render() {
-    return <div>{this.props.children}</div>;
+    return (<FormContext.Provider value={{
+      submit: this.props.onSubmit
+    }}
+    >
+      <div>{this.props.children}</div>
+    </FormContext.Provider>);
   }
 }
 
 class SubmitButton extends React.Component {
   render() {
-    return <button>{this.props.children}</button>;
+    return (
+      <FormContext.Consumer>
+        {form => (
+          <button onClick={form.submit}>
+            {this.props.children}
+          </button>
+        )}
+      </FormContext.Consumer>
+    );
   }
 }
 
