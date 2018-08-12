@@ -18,27 +18,106 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
+import { format } from "path";
 
-class Form extends React.Component {
+
+const FormContext = React.createContext();
+
+class Form extends React.PureComponent {
+  state = {
+    reset: false
+  }
+
+
+  componentDidMount() {
+    this.setState({ reset: false });
+  }
+
+  componentDidUpdate() {
+    this.setState({ reset: false });
+  }
+
+
+  resetMe = () => {
+    this.setState({ reset: true });
+  }
+
+  renderClonedIfReset=()=>{
+    if( this.state.reset){
+      return React.Children.map(this.props.children,child=>(React.cloneElement(child,this.state)));
+    }
+    return this.props.children;
+  }
+
   render() {
-    return <div>{this.props.children}</div>;
+    return (<FormContext.Provider value={{
+      submit: this.props.onSubmit,
+      reset: this.resetMe
+    }}
+    >
+    <div>{this.renderClonedIfReset()}</div>
+    </FormContext.Provider>);
   }
 }
 
 class SubmitButton extends React.Component {
   render() {
-    return <button>{this.props.children}</button>;
+    return (
+      <FormContext.Consumer>
+        {form => (
+          <button onClick={form.submit}>Submit
+          </button>
+        )}
+      </FormContext.Consumer>
+    );
   }
 }
 
-class TextInput extends React.Component {
+class ResetButton extends React.Component {
   render() {
     return (
-      <input
-        type="text"
-        name={this.props.name}
-        placeholder={this.props.placeholder}
-      />
+      <FormContext.Consumer>{
+        form => (
+          <button onClick={form.reset}>
+            {this.props.children}
+          </button>
+        )
+      }
+      </FormContext.Consumer>
+    );
+  }
+
+}
+
+class TextInput extends React.Component {
+  isEnterPressed = (input, form) => {
+    if (input.key == 'Enter') {
+      form.submit();
+    }
+  };
+
+  render() {
+    return (
+      <FormContext.Consumer>
+        {form => (
+          this.props.reset?
+          <input
+            type="text"
+            name={this.props.name}
+            placeholder={this.props.placeholder}
+            value=''
+            onKeyDown={(input) => (this.isEnterPressed(input, form))}
+          />:
+          <input
+            type="text"
+            name={this.props.name}
+            placeholder={this.props.placeholder}
+            onKeyDown={(input) => (this.isEnterPressed(input, form))}
+          />
+        )
+        }
+
+      </FormContext.Consumer>
     );
   }
 }
@@ -57,11 +136,12 @@ class App extends React.Component {
 
         <Form onSubmit={this.handleSubmit}>
           <p>
-            <TextInput name="firstName" placeholder="First Name" />{" "}
-            <TextInput name="lastName" placeholder="Last Name" />
+            First Name: <TextInput name="firstName" placeholder="First Name" /> <br/>
+            Last Name: <TextInput name="lastName" placeholder="Last Name" />
           </p>
           <p>
-            <SubmitButton>Submit</SubmitButton>
+            <SubmitButton>Submit</SubmitButton><br />
+            <ResetButton>Reset</ResetButton>
           </p>
         </Form>
       </div>
