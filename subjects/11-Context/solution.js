@@ -24,13 +24,16 @@ const FormContext = React.createContext();
 class Form extends React.Component {
   handleSubmit = () => {
     if (this.props.onSubmit) this.props.onSubmit();
-  };
+  }
+  handleReset = (element) => {
+    element.value='';
+  }
 
   render() {
     return (
       <FormContext.Provider
         value={{
-          submit: this.handleSubmit
+          submit: this.handleSubmit,
         }}
       >
         <div>{this.props.children}</div>
